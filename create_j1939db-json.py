@@ -99,7 +99,7 @@ class J1939daConverter:
     # returns a float in X per bit or int(0)
     def get_spn_resolution(contents):
         norm_contents = contents.lower()
-        if '0 to 255 per byte' in norm_contents or 'states/' in norm_contents:
+        if '0 to 255 per byte' in norm_contents or 'states/' in norm_contents or 'states' in norm_contents or 'data specific' in norm_contents:
             return 1.0
         elif 'bit-mapped' in norm_contents or \
              'binary' in norm_contents or \
@@ -317,24 +317,24 @@ class J1939daConverter:
 
         pgn_col = header_row.index('PGN')
         spn_col = header_row.index('SPN')
-        acronym_col = header_row.index('ACRONYM')
-        pgn_label_col = header_row.index('PARAMETER_GROUP_LABEL')
-        pgn_data_length_col = header_row.index('PGN_DATA_LENGTH')
+        acronym_col = header_row.index('PG_ACRONYM')
+        pgn_label_col = header_row.index('PG_LABEL')
+        pgn_data_length_col = header_row.index('PG_DATA_LENGTH')
         transmission_rate_col = header_row.index('TRANSMISSION_RATE')
-        spn_position_in_pgn_col = header_row.index('SPN_POSITION_IN_PGN')
-        spn_name_col = header_row.index('SPN_NAME')
+        spn_position_in_pgn_col = header_row.index('SP_POSITION_IN_PG')
+        spn_name_col = header_row.index('SP_LABEL')
         offset_col = header_row.index('OFFSET')
         data_range_col = header_row.index('DATA_RANGE')
-        resolution_col = header_row.index('RESOLUTION')
-        spn_length_col = header_row.index('SPN_LENGTH')
-        units_col = header_row.index('UNITS')
+        resolution_col = header_row.index('SCALING')
+        spn_length_col = header_row.index('SP_LENGTH')
+        units_col = header_row.index('UNIT')
         operational_range_col = header_row.index('OPERATIONAL_RANGE')
-        spn_description_col = header_row.index('SPN_DESCRIPTION')
+        spn_description_col = header_row.index('SP_DESCRIPTION')
 
         for i in range(header_row_num+1, sheet.nrows):
             row = sheet.row_values(i)
             pgn = row[pgn_col]
-            if pgn == '':
+            if pgn == '' or pgn == 'N/A':
                 continue
 
             pgn_label = str(int(pgn))
@@ -362,7 +362,7 @@ class J1939daConverter:
             if pretty_j1939.describe.is_transport_pgn(int(pgn)):  # skip all SPNs for transport PGNs
                 continue
 
-            if not spn == '':
+            if not (spn == '' or spn == 'N/A'):
                 if spn_factcheck_map.get(spn, None) is None:
                     spn_factcheck_map.update({spn: [pgn, ]})
                 else:
@@ -639,7 +639,7 @@ class J1939daConverter:
 
     def convert(self, output_file):
         self.j1939db = OrderedDict()
-        sheet_name = 'SPNs & PGNs'
+        sheet_name = 'SPs & PGs'
         self.process_spns_and_pgns_tab(self.find_first_sheet_by_name(sheet_name))
         sheet_name = 'Global Source Addresses (B2)'
         self.process_any_source_addresses_sheet(self.find_first_sheet_by_name(sheet_name))
